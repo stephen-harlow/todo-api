@@ -430,6 +430,26 @@ class VikunjaClient:
         """Read every task in exactly one project; fail rather than return partial data."""
         return self._list(f"/projects/{_id(project_id)}/tasks", project_id=project_id)
 
+    def list_projects(self) -> list[dict[str, Any]]:
+        """Read every project visible to this bot; fail rather than return partial data."""
+        return self._list("/projects")
+
+    def create_project(
+        self, title: str, description: str = "", identifier: str = ""
+    ) -> dict[str, Any]:
+        """Create a project once; the caller must durably record intent and reconcile."""
+        if not isinstance(title, str) or not title.strip() or len(title) > 250:
+            raise TodoAPIError("Project title must contain one to 250 characters.")
+        if not isinstance(description, str) or len(description) > 500_000:
+            raise TodoAPIError("Project description exceeds the size limit.")
+        if not isinstance(identifier, str) or len(identifier) > 10:
+            raise TodoAPIError("Project identifier must be at most 10 characters.")
+        body: dict[str, Any] = {"title": title, "description": description}
+        if identifier:
+            body["identifier"] = identifier
+        data, _ = self._request("POST", "/projects", body=body)
+        return self._resource(data, write=True)
+
     def get_task(self, task_id: int) -> TaskResult:
         """Read a task snapshot with the exact ETag needed for conditional PATCH."""
         task_id = _id(task_id)
