@@ -5,8 +5,10 @@ https://try.vikunja.io/api/v2/openapi.json, v2.8.0-126-g5e0caf2b, inspected
 2026-11-12. This pins the implemented subset, not a qualified deployment release.
 Labels/relations are read-only Task fields: use their dedicated POST endpoints.
 No request is automatically retried. Reconcile uncertain writes before replay.
-PATCH is disabled by default: the isolated v2.8.0 canary ignored stale If-Match.
-Enable conditional_patch_verified only after testing the selected server release.
+Conditional PATCH (If-Match) is enabled by default: the deployed server is our
+fork of v2.8.0 that enforces If-Match (the canary now passes
+qualified_for_automated_updates). Set conditional_patch_verified=False only when
+talking to a server that ignores stale If-Match.
 """
 
 from __future__ import annotations
@@ -95,7 +97,7 @@ class TodoAPIConfig:
     max_pages: int = 100
     max_items: int = 10_000
     allow_insecure_localhost: bool = False
-    conditional_patch_verified: bool = False
+    conditional_patch_verified: bool = True
 
     def __post_init__(self):
         try:
